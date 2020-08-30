@@ -2,13 +2,17 @@
 
 A **testing framework** for your tutorials.
 
-### What is it?
-
 Are you tired of manually testing your tutorials to make sure the steps actually work? Are they broken or outdated? 
 
 Fear no more! **Ugo** is here to help automate that!
 
-### What does it look like?
+### Install
+
+```bash
+go get -u github.com/jromero/ugo/cmd/ugo
+```
+
+### Usage
 
 Integrating **Ugo** into your tutorials is done by just adding a few hidden HTML comments. You can then use the `Ugo` CLI to test your tutorials. 
 
