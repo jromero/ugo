@@ -72,7 +72,7 @@ func executeAssertContains(priorOutput string, task Task) error {
 	if !strings.Contains(ansiPattern.ReplaceAllString(priorOutput, ""), expected) {
 		return fmt.Errorf("no output contained:\n%s", expected)
 	}
-	
+
 	return nil
 }
 

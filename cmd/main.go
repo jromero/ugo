@@ -53,7 +53,7 @@ func main() {
 				if verbose {
 					println("reading file:", file)
 				}
-				
+
 				content, err := ioutil.ReadFile(file)
 				if err != nil {
 					fatalError(2, err.Error())
@@ -85,7 +85,7 @@ func main() {
 			if err != nil {
 				fatalError(3, err.Error())
 			}
-			
+
 			println("Nothing broken. Good job!")
 		})
 
@@ -93,20 +93,29 @@ func main() {
 }
 
 func searchForFiles(path string, recursive bool) (files []string, err error) {
-	if f, err := ioutil.ReadDir(path); err != nil {
+	fileInfo, err := os.Stat(path)
+	if err != nil {
 		return nil, err
-	} else {
-		for _, fileInfo := range f {
-			if !fileInfo.IsDir() {
-				files = append(files, filepath.Join(path, fileInfo.Name()))
-			} else if recursive {
-				f, err := searchForFiles(filepath.Join(path, fileInfo.Name()), true)
-				if err != nil {
-					return nil, err
+	}
+
+	if fileInfo.IsDir() {
+		if f, err := ioutil.ReadDir(path); err != nil {
+			return nil, err
+		} else {
+			for _, fileInfo := range f {
+				if !fileInfo.IsDir() {
+					files = append(files, filepath.Join(path, fileInfo.Name()))
+				} else if recursive {
+					f, err := searchForFiles(filepath.Join(path, fileInfo.Name()), recursive)
+					if err != nil {
+						return nil, err
+					}
+					files = append(files, f...)
 				}
-				files = append(files, f...)
 			}
 		}
+	} else {
+		files = append(files, path)
 	}
 
 	for i := 0; i < len(files); i++ {

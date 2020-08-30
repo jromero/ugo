@@ -66,7 +66,7 @@ echo "hello #2"
 						assert.Nil(t, err)
 					})
 				})
-				
+
 				when("content has ansi codes", func() {
 					it("matches ignoring ansi", func() {
 						err := ugo.Execute(*ugo.NewPlan([]ugo.Suite{

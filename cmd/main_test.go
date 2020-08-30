@@ -45,5 +45,23 @@ func TestCmd(t *testing.T) {
 				})
 			})
 		})
+
+		when("path is a file", func() {
+			it("returns file if exists", func() {
+				cwd, err := os.Getwd()
+				assert.Nil(t, err)
+
+				files, err := searchForFiles(filepath.Join("testdata", "tutorials", "tutorial-1.md"), false)
+				assert.Nil(t, err)
+				assert.Equal(t, []string{
+					filepath.Join(cwd, "testdata", "tutorials", "tutorial-1.md"),
+				}, files)
+			})
+
+			it("errors if file doesn't exist", func() {
+				_, err := searchForFiles(filepath.Join("testdata", "tutorials", "non-exists.md"), false)
+				assert.EqualError(t, err, "stat testdata/tutorials/non-exists.md: no such file or directory")
+			})
+		})
 	})
 }
