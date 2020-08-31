@@ -37,7 +37,9 @@ func TestAggregate(t *testing.T) {
 
 				plan := ugo.Aggregate(plans...)
 				assert.Equal(t, types.NewPlan([]types.Suite{types.NewSuite("cross-file-tutorial", 1, []types.Task{
+					tasks.NewExecTask(types.ScopeSetup, "echo setup from a", 0),
 					tasks.NewExecTask(types.ScopeDefault, "echo hello 1", 0),
+					tasks.NewExecTask(types.ScopeTeardown, "echo teardown from b", 0),
 					tasks.NewExecTask(types.ScopeDefault, "echo hello 2", 0),
 					tasks.NewExecTask(types.ScopeDefault, "echo hello 3", 0),
 				})}), plan)

@@ -14,7 +14,12 @@ func (s Suite) Weight() int {
 	return s.weight
 }
 
+// Tasks returns the task by scope. If scope is empty, it returns all
 func (s Suite) Tasks(scope string) []Task {
+	if scope == "" {
+		return s.tasks
+	}
+
 	var tasks []Task
 	for _, task := range s.tasks {
 		if task.Scope() == scope {
