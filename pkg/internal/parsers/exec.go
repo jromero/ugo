@@ -6,8 +6,8 @@ import (
 	"regexp"
 	"strconv"
 
-	"github.com/jromero/ugo/internal/tasks"
-	"github.com/jromero/ugo/internal/types"
+	"github.com/jromero/ugo/pkg/internal/tasks"
+	"github.com/jromero/ugo/pkg/types"
 )
 
 var taskExecToken = regexp.MustCompile(`^exec;?(exit-code=(-?[0-9]+))?;?$`)

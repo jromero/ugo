@@ -3,8 +3,8 @@ package parsers
 import (
 	"regexp"
 
-	"github.com/jromero/ugo/internal/tasks"
-	"github.com/jromero/ugo/internal/types"
+	"github.com/jromero/ugo/pkg/internal/tasks"
+	"github.com/jromero/ugo/pkg/types"
 )
 
 var taskAssertContainsToken = regexp.MustCompile(`^assert=contains;?$`)

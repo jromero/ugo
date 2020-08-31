@@ -6,8 +6,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/jromero/ugo/internal/tasks"
-	"github.com/jromero/ugo/internal/types"
+	"github.com/jromero/ugo/pkg/internal/tasks"
+	"github.com/jromero/ugo/pkg/types"
 )
 
 var ansiPattern = regexp.MustCompile("[\u001B\u009B][[\\]()#;?]*(?:(?:(?:[a-zA-Z\\d]*(?:;[a-zA-Z\\d]*)*)?\u0007)|(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PRZcf-ntqry=><~]))")

@@ -1,4 +1,4 @@
-package ugo_test
+package pkg_test
 
 import (
 	"testing"
@@ -6,9 +6,9 @@ import (
 	"github.com/sclevine/spec"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/jromero/ugo"
-	"github.com/jromero/ugo/internal/tasks"
-	"github.com/jromero/ugo/internal/types"
+	"github.com/jromero/ugo/pkg"
+	"github.com/jromero/ugo/pkg/internal/tasks"
+	"github.com/jromero/ugo/pkg/types"
 )
 
 func TestParse(t *testing.T) {
@@ -16,21 +16,21 @@ func TestParse(t *testing.T) {
 
 		when("suite", func() {
 			it("parses suite", func() {
-				plan, err := ugo.Parse(`
+				plan, err := pkg.Parse(`
 <!-- test:suite=test1;weight=1 -->
 `)
 				assert.Nil(t, err)
-				assert.Equal(t, *ugo.NewPlan([]ugo.Suite{*ugo.NewSuite("test1", 1, nil)}), plan)
+				assert.Equal(t, types.NewPlan([]types.Suite{types.NewSuite("test1", 1, nil)}), plan)
 			})
 
 			it("no suite found", func() {
-				_, err := ugo.Parse(`some content without a suite definition`)
+				_, err := pkg.Parse(`some content without a suite definition`)
 				assert.EqualError(t, err, "no suite found")
 			})
 
 			it("multiple suites (are ordered)", func() {
 				plan, err :=
-					ugo.Parse(`
+					pkg.Parse(`
 <!-- test:suite=test1;weight=1 -->
 <!-- test:exec -->
 ` + "```shell bash" + `
@@ -49,14 +49,14 @@ echo "hello #3"!
 `)
 				assert.Nil(t, err)
 
-				expected := *ugo.NewPlan([]ugo.Suite{
-					*ugo.NewSuite("test1", 1, []types.Task{
+				expected := types.NewPlan([]types.Suite{
+					types.NewSuite("test1", 1, []types.Task{
 						tasks.NewExecTask(`echo "hello #1"!`, 0),
 					}),
-					*ugo.NewSuite("test3", 2, []types.Task{
+					types.NewSuite("test3", 2, []types.Task{
 						tasks.NewExecTask(`echo "hello #3"!`, 0),
 					}),
-					*ugo.NewSuite("test2", 3, []types.Task{
+					types.NewSuite("test2", 3, []types.Task{
 						tasks.NewExecTask(`echo "hello #2"!`, 0),
 					}),
 				})
@@ -66,7 +66,7 @@ echo "hello #3"!
 
 			it("multiple suites (aggregated based on weight)", func() {
 				plan, err :=
-					ugo.Parse(`
+					pkg.Parse(`
 <!-- test:suite=test1;weight=2 -->
 <!-- test:exec -->
 ` + "```shell bash" + `
@@ -85,12 +85,12 @@ echo "hello #3"!
 `)
 				assert.Nil(t, err)
 
-				expected := *ugo.NewPlan([]ugo.Suite{
-					*ugo.NewSuite("test1", 2, []types.Task{
+				expected := types.NewPlan([]types.Suite{
+					types.NewSuite("test1", 2, []types.Task{
 						tasks.NewExecTask(`echo "hello #3"!`, 0),
 						tasks.NewExecTask(`echo "hello #1"!`, 0),
 					}),
-					*ugo.NewSuite("test2", 3, []types.Task{
+					types.NewSuite("test2", 3, []types.Task{
 						tasks.NewExecTask(`echo "hello #2"!`, 0),
 					}),
 				})
@@ -101,7 +101,7 @@ echo "hello #3"!
 		when("tasks", func() {
 			when("unknown task type", func() {
 				it("errors", func() {
-					_, err := ugo.Parse(`
+					_, err := pkg.Parse(`
 <!-- test:suite=test1 -->
 
 <!-- test:some-other-value -->
@@ -115,7 +115,7 @@ echo "hello #1"!
 
 			when("file", func() {
 				it("file task is parsed", func() {
-					plan, err := ugo.Parse(`
+					plan, err := pkg.Parse(`
 <!-- test:suite=test1;weight=1 -->
 <!-- test:file=some-file -->
 ` + "```" + `
@@ -124,7 +124,7 @@ some-content
 `)
 					assert.Nil(t, err)
 
-					expected := *ugo.NewPlan([]ugo.Suite{*ugo.NewSuite("test1", 1, []types.Task{
+					expected := types.NewPlan([]types.Suite{types.NewSuite("test1", 1, []types.Task{
 						tasks.NewFileTask("some-file", "some-content"),
 					})})
 					assert.Equal(t, expected, plan)
@@ -133,7 +133,7 @@ some-content
 
 			when("exec", func() {
 				it("is parsed", func() {
-					plan, err := ugo.Parse(`
+					plan, err := pkg.Parse(`
 <!-- test:suite=test1 -->
 	
 <!-- test:exec -->
@@ -143,14 +143,14 @@ echo "hello"!
 `)
 					assert.Nil(t, err)
 
-					expected := *ugo.NewPlan([]ugo.Suite{*ugo.NewSuite("test1", 0, []types.Task{
+					expected := types.NewPlan([]types.Suite{types.NewSuite("test1", 0, []types.Task{
 						tasks.NewExecTask(`echo "hello"!`, 0),
 					})})
 					assert.Equal(t, expected, plan)
 				})
 
 				it("parses exit code", func() {
-					plan, err := ugo.Parse(`
+					plan, err := pkg.Parse(`
 <!-- test:suite=test1 -->
 	
 <!-- test:exec;exit-code=1 -->
@@ -160,14 +160,14 @@ exit 1
 `)
 					assert.Nil(t, err)
 
-					expected := *ugo.NewPlan([]ugo.Suite{*ugo.NewSuite("test1", 0, []types.Task{
+					expected := types.NewPlan([]types.Suite{types.NewSuite("test1", 0, []types.Task{
 						tasks.NewExecTask(`exit 1`, 1),
 					})})
 					assert.Equal(t, expected, plan)
 				})
 
 				it("parses exit code (-1)", func() {
-					plan, err := ugo.Parse(`
+					plan, err := pkg.Parse(`
 <!-- test:suite=test1 -->
 	
 <!-- test:exec;exit-code=-1 -->
@@ -177,7 +177,7 @@ exit 99
 `)
 					assert.Nil(t, err)
 
-					expected := *ugo.NewPlan([]ugo.Suite{*ugo.NewSuite("test1", 0, []types.Task{
+					expected := types.NewPlan([]types.Suite{types.NewSuite("test1", 0, []types.Task{
 						tasks.NewExecTask(`exit 99`, -1),
 					})})
 					assert.Equal(t, expected, plan)
@@ -187,7 +187,7 @@ exit 99
 			when("assertion", func() {
 				when("contains", func() {
 					it("is parsed", func() {
-						plan, err := ugo.Parse(`
+						plan, err := pkg.Parse(`
 <!-- test:suite=test1 -->
 	
 <!-- test:assert=contains -->
@@ -197,7 +197,7 @@ some-output
 `)
 						assert.Nil(t, err)
 
-						expected := *ugo.NewPlan([]ugo.Suite{*ugo.NewSuite("test1", 0, []types.Task{
+						expected := types.NewPlan([]types.Suite{types.NewSuite("test1", 0, []types.Task{
 							tasks.NewAssertContainsTask(`some-output`),
 						})})
 						assert.Equal(t, expected, plan)
@@ -207,7 +207,7 @@ some-output
 
 			it("multiple tasks", func() {
 				plan, err :=
-					ugo.Parse(`
+					pkg.Parse(`
 <!-- test:suite=test1 -->
 
 <!-- test:file=some-file -->
@@ -223,7 +223,7 @@ echo "hello"!
 `)
 				assert.Nil(t, err)
 
-				expected := *ugo.NewPlan([]ugo.Suite{*ugo.NewSuite("test1", 0, []types.Task{
+				expected := types.NewPlan([]types.Suite{types.NewSuite("test1", 0, []types.Task{
 					tasks.NewFileTask("some-file", "[root]\nkey=value"),
 					tasks.NewExecTask(`echo "hello"!`, 0),
 				})})
@@ -232,7 +232,7 @@ echo "hello"!
 			})
 
 			it("multiple code blocks after task", func() {
-				plan, err := ugo.Parse(`
+				plan, err := pkg.Parse(`
 <!-- test:suite=test1 -->
 	
 <!-- test:exec -->
@@ -246,7 +246,7 @@ echo "hello #2"!
 `)
 				assert.Nil(t, err)
 
-				expected := *ugo.NewPlan([]ugo.Suite{*ugo.NewSuite("test1", 0, []types.Task{
+				expected := types.NewPlan([]types.Suite{types.NewSuite("test1", 0, []types.Task{
 					tasks.NewExecTask(`echo "hello #1"!`, 0),
 				})})
 				assert.Equal(t, expected, plan)

@@ -1,12 +1,12 @@
-package ugo
+package pkg
 
 import (
 	"fmt"
 	"io/ioutil"
 	"log"
 
-	"github.com/jromero/ugo/internal/invokers"
-	"github.com/jromero/ugo/internal/types"
+	"github.com/jromero/ugo/pkg/internal/invokers"
+	"github.com/jromero/ugo/pkg/types"
 )
 
 var taskInvokers = []types.Invoker{
@@ -15,7 +15,7 @@ var taskInvokers = []types.Invoker{
 	&invokers.FileInvoker{},
 }
 
-func Invoke(plan Plan) error {
+func Invoke(plan types.Plan) error {
 	prevFlags := log.Flags()
 	defer func() { log.SetFlags(prevFlags) }()
 	prevPrefix := log.Prefix()
@@ -23,19 +23,19 @@ func Invoke(plan Plan) error {
 
 	log.SetFlags(0)
 
-	for _, suite := range plan.suites {
-		log.SetPrefix(fmt.Sprintf("[%s] ", suite.name))
-		log.Printf("Suite '%s' executing...", suite.name)
+	for _, suite := range plan.Suites() {
+		log.SetPrefix(fmt.Sprintf("[%s] ", suite.Name()))
+		log.Printf("Suite '%s' executing...", suite.Name())
 
-		workDir, err := ioutil.TempDir("", fmt.Sprintf("suite-%s-*", suite.name))
+		workDir, err := ioutil.TempDir("", fmt.Sprintf("suite-%s-*", suite.Name()))
 		if err != nil {
 			return err
 		}
 		log.Println("Working directory:", workDir)
 
 		var aggrOutput string
-		for i, task := range suite.tasks {
-			log.SetPrefix(fmt.Sprintf("[%s][task#%d] ", suite.name, i+1))
+		for i, task := range suite.Tasks() {
+			log.SetPrefix(fmt.Sprintf("[%s][task#%d] ", suite.Name(), i+1))
 			log.Printf("--> Running task #%d", i+1)
 
 			for _, invoker := range taskInvokers {

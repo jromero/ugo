@@ -1,4 +1,4 @@
-package ugo
+package pkg
 
 import (
 	"errors"
@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/jromero/ugo/internal/parsers"
-	"github.com/jromero/ugo/internal/types"
+	"github.com/jromero/ugo/pkg/internal/parsers"
+	"github.com/jromero/ugo/pkg/types"
 )
 
 var (
@@ -28,12 +28,12 @@ type parser interface {
 
 var NoSuiteError = errors.New("no suite found")
 
-func Parse(content string) (Plan, error) {
-	var suites []Suite
+func Parse(content string) (types.Plan, error) {
+	var suites []types.Suite
 
 	suiteSubmatches := suiteToken.FindAllStringSubmatchIndex(content, -1)
 	if len(suiteSubmatches) == 0 {
-		return Plan{}, NoSuiteError
+		return types.Plan{}, NoSuiteError
 	}
 
 	for i, suiteSubmatch := range suiteSubmatches {
@@ -48,7 +48,7 @@ func Parse(content string) (Plan, error) {
 			value := content[suiteSubmatch[6]:suiteSubmatch[7]]
 			weight, err = strconv.Atoi(value)
 			if err != nil {
-				return Plan{}, errors.New(fmt.Sprintf("parsing weight: %s: %s", value, err.Error()))
+				return types.Plan{}, errors.New(fmt.Sprintf("parsing weight: %s: %s", value, err.Error()))
 			}
 		}
 
@@ -60,13 +60,13 @@ func Parse(content string) (Plan, error) {
 			additionalTasks, err = parseTasks(content[suiteSubmatch[1]:])
 		}
 		if err != nil {
-			return Plan{}, err
+			return types.Plan{}, err
 		}
 
-		suites = append(suites, *NewSuite(name, weight, append(tasks, additionalTasks...)))
+		suites = append(suites, types.NewSuite(name, weight, append(tasks, additionalTasks...)))
 	}
 
-	return *NewPlan(aggregateSuites(suites)), nil
+	return types.NewPlan(aggregateSuites(suites)), nil
 }
 
 func parseTasks(content string) (tasks []types.Task, err error) {

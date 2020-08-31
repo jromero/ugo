@@ -10,8 +10,8 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	"github.com/jromero/ugo/internal/tasks"
-	"github.com/jromero/ugo/internal/types"
+	"github.com/jromero/ugo/pkg/internal/tasks"
+	"github.com/jromero/ugo/pkg/types"
 )
 
 var _ types.Invoker = (*ExecInvoker)(nil)

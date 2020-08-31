@@ -8,7 +8,8 @@ import (
 
 	"github.com/thatisuday/commando"
 
-	"github.com/jromero/ugo"
+	"github.com/jromero/ugo/pkg"
+	"github.com/jromero/ugo/pkg/types"
 )
 
 type cliArgs = map[string]commando.ArgValue
@@ -48,7 +49,7 @@ func main() {
 				fatalError(1, err.Error())
 			}
 
-			var plans []ugo.Plan
+			var plans []types.Plan
 			for _, file := range files {
 				if verbose {
 					println("reading file:", file)
@@ -59,9 +60,9 @@ func main() {
 					fatalError(2, err.Error())
 				}
 
-				p, err := ugo.Parse(string(content))
+				p, err := pkg.Parse(string(content))
 				if err != nil {
-					if err == ugo.NoSuiteError {
+					if err == pkg.NoSuiteError {
 						continue
 					}
 
@@ -76,7 +77,7 @@ func main() {
 				return
 			}
 
-			err = ugo.Invoke(ugo.Aggregate(plans...))
+			err = pkg.Invoke(pkg.Aggregate(plans...))
 			if err != nil {
 				fatalError(3, err.Error())
 			}

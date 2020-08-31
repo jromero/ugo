@@ -1,7 +1,7 @@
 package tasks
 
 import (
-	"github.com/jromero/ugo/internal/types"
+	"github.com/jromero/ugo/pkg/types"
 )
 
 var _ types.Task = (*FileTask)(nil)
