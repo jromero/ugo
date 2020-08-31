@@ -48,7 +48,7 @@ func main() {
 				fatalError(1, err.Error())
 			}
 
-			var plan *ugo.Plan
+			var plans []ugo.Plan
 			for _, file := range files {
 				if verbose {
 					println("reading file:", file)
@@ -68,20 +68,15 @@ func main() {
 					fatalError(2, "parsing '%s': %s", file, err.Error())
 				}
 
-				if plan == nil {
-					plan = &p
-				} else {
-					p = ugo.Aggregate(*plan, p)
-					plan = &p
-				}
+				plans = append(plans, p)
 			}
 
-			if plan == nil {
+			if len(plans) == 0 {
 				println("nothing found to execute or test")
 				return
 			}
 
-			err = ugo.Execute(*plan)
+			err = ugo.Execute(ugo.Aggregate(plans...))
 			if err != nil {
 				fatalError(3, err.Error())
 			}
