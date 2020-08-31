@@ -67,6 +67,20 @@ echo "hello #2"
 					})
 				})
 
+				when("multiple consecutive asserts", func() {
+					it("searches in output", func() {
+						err := ugo.Execute(*ugo.NewPlan([]ugo.Suite{
+							*ugo.NewSuite("test1", 0, []ugo.Task{
+								*ugo.NewExecTask("echo hello1;echo hello2", 0),
+								*ugo.NewAssertContainsTask("hello1"),
+								*ugo.NewAssertContainsTask("hello2"),
+							}),
+						}))
+
+						assert.Nil(t, err)
+					})
+				})
+
 				when("content has ansi codes", func() {
 					it("matches ignoring ansi", func() {
 						err := ugo.Execute(*ugo.NewPlan([]ugo.Suite{
@@ -83,7 +97,7 @@ echo -e "\x1b[38;5;140mfoo\x1b[0mbar"
 				})
 
 				when("contents don't contain", func() {
-					it("doesn't error", func() {
+					it("errors", func() {
 						err := ugo.Execute(*ugo.NewPlan([]ugo.Suite{
 							*ugo.NewSuite("test1", 0, []ugo.Task{
 								*ugo.NewExecTask(`echo "hello #1"`, 0),

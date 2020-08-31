@@ -32,13 +32,16 @@ func Execute(plan Plan) error {
 		}
 		log.Println("Working directory:", workDir)
 
-		var output string
+		var aggrOutput string
 		for i, task := range suite.tasks {
 			log.SetPrefix(fmt.Sprintf("[%s][task#%d] ", suite.name, i+1))
 			log.Printf("--> Running task #%d", i+1)
-			if output, err = executeTask(output, workDir, i+1, task); err != nil {
+			output, err := executeTask(aggrOutput, workDir, i+1, task)
+			if err != nil {
 				return err
 			}
+
+			aggrOutput += output
 		}
 	}
 
