@@ -51,13 +51,13 @@ echo "hello #3"!
 
 				expected := types.NewPlan([]types.Suite{
 					types.NewSuite("test1", 1, []types.Task{
-						tasks.NewExecTask(`echo "hello #1"!`, 0),
+						tasks.NewExecTask(types.ScopeDefault, `echo "hello #1"!`, 0),
 					}),
 					types.NewSuite("test3", 2, []types.Task{
-						tasks.NewExecTask(`echo "hello #3"!`, 0),
+						tasks.NewExecTask(types.ScopeDefault, `echo "hello #3"!`, 0),
 					}),
 					types.NewSuite("test2", 3, []types.Task{
-						tasks.NewExecTask(`echo "hello #2"!`, 0),
+						tasks.NewExecTask(types.ScopeDefault, `echo "hello #2"!`, 0),
 					}),
 				})
 
@@ -87,11 +87,11 @@ echo "hello #3"!
 
 				expected := types.NewPlan([]types.Suite{
 					types.NewSuite("test1", 2, []types.Task{
-						tasks.NewExecTask(`echo "hello #3"!`, 0),
-						tasks.NewExecTask(`echo "hello #1"!`, 0),
+						tasks.NewExecTask(types.ScopeDefault, `echo "hello #3"!`, 0),
+						tasks.NewExecTask(types.ScopeDefault, `echo "hello #1"!`, 0),
 					}),
 					types.NewSuite("test2", 3, []types.Task{
-						tasks.NewExecTask(`echo "hello #2"!`, 0),
+						tasks.NewExecTask(types.ScopeDefault, `echo "hello #2"!`, 0),
 					}),
 				})
 				assert.Equal(t, expected, plan)
@@ -125,7 +125,7 @@ some-content
 					assert.Nil(t, err)
 
 					expected := types.NewPlan([]types.Suite{types.NewSuite("test1", 1, []types.Task{
-						tasks.NewFileTask("some-file", "some-content"),
+						tasks.NewFileTask(types.ScopeDefault, "some-file", "some-content"),
 					})})
 					assert.Equal(t, expected, plan)
 				})
@@ -144,7 +144,7 @@ echo "hello"!
 					assert.Nil(t, err)
 
 					expected := types.NewPlan([]types.Suite{types.NewSuite("test1", 0, []types.Task{
-						tasks.NewExecTask(`echo "hello"!`, 0),
+						tasks.NewExecTask(types.ScopeDefault, `echo "hello"!`, 0),
 					})})
 					assert.Equal(t, expected, plan)
 				})
@@ -161,7 +161,7 @@ exit 1
 					assert.Nil(t, err)
 
 					expected := types.NewPlan([]types.Suite{types.NewSuite("test1", 0, []types.Task{
-						tasks.NewExecTask(`exit 1`, 1),
+						tasks.NewExecTask(types.ScopeDefault, `exit 1`, 1),
 					})})
 					assert.Equal(t, expected, plan)
 				})
@@ -178,7 +178,7 @@ exit 99
 					assert.Nil(t, err)
 
 					expected := types.NewPlan([]types.Suite{types.NewSuite("test1", 0, []types.Task{
-						tasks.NewExecTask(`exit 99`, -1),
+						tasks.NewExecTask(types.ScopeDefault, `exit 99`, -1),
 					})})
 					assert.Equal(t, expected, plan)
 				})
@@ -198,7 +198,7 @@ some-output
 						assert.Nil(t, err)
 
 						expected := types.NewPlan([]types.Suite{types.NewSuite("test1", 0, []types.Task{
-							tasks.NewAssertContainsTask(`some-output`),
+							tasks.NewAssertContainsTask(types.ScopeDefault, `some-output`),
 						})})
 						assert.Equal(t, expected, plan)
 					})
@@ -224,8 +224,8 @@ echo "hello"!
 				assert.Nil(t, err)
 
 				expected := types.NewPlan([]types.Suite{types.NewSuite("test1", 0, []types.Task{
-					tasks.NewFileTask("some-file", "[root]\nkey=value"),
-					tasks.NewExecTask(`echo "hello"!`, 0),
+					tasks.NewFileTask(types.ScopeDefault, "some-file", "[root]\nkey=value"),
+					tasks.NewExecTask(types.ScopeDefault, `echo "hello"!`, 0),
 				})})
 
 				assert.Equal(t, expected, plan)
@@ -247,9 +247,46 @@ echo "hello #2"!
 				assert.Nil(t, err)
 
 				expected := types.NewPlan([]types.Suite{types.NewSuite("test1", 0, []types.Task{
-					tasks.NewExecTask(`echo "hello #1"!`, 0),
+					tasks.NewExecTask(types.ScopeDefault, `echo "hello #1"!`, 0),
 				})})
 				assert.Equal(t, expected, plan)
+			})
+
+			when("scoped", func() {
+				when("scopes are present", func() {
+					it("tasks have appropriate scope", func() {
+						plan, err := ugo.Parse(`
+<!-- test:suite=test1 -->
+	
+<!-- test:setup:exec -->
+<!--
+` + "```shell bash" + `
+echo setup
+` + "```" + `
+-->
+
+<!-- test:teardown:exec -->
+<!--
+` + "```shell bash" + `
+echo teardown
+` + "```" + `
+-->
+
+<!-- test:exec -->
+` + "```shell bash" + `
+echo hello
+` + "```" + `
+`)
+						assert.Nil(t, err)
+
+						expected := types.NewPlan([]types.Suite{types.NewSuite("test1", 0, []types.Task{
+							tasks.NewExecTask(types.ScopeSetup, `echo setup`, 0),
+							tasks.NewExecTask(types.ScopeTeardown, `echo teardown`, 0),
+							tasks.NewExecTask(types.ScopeDefault, `echo hello`, 0),
+						})})
+						assert.Equal(t, expected, plan)
+					})
+				})
 			})
 		})
 	})

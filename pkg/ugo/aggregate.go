@@ -42,9 +42,9 @@ func aggregateSuites(suites []types.Suite) []types.Suite {
 			return ss[i].Weight() < ss[j].Weight()
 		})
 
-		tasks := ss[0].Tasks()
+		tasks := ss[0].Tasks(types.ScopeDefault)
 		for i := 1; i < len(ss); i++ {
-			tasks = append(tasks, ss[i].Tasks()...)
+			tasks = append(tasks, ss[i].Tasks(types.ScopeDefault)...)
 		}
 
 		newSuites = append(newSuites, types.NewSuite(name, weight, tasks))

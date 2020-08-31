@@ -12,9 +12,11 @@ import (
 
 var taskExecToken = regexp.MustCompile(`^exec;?(exit-code=(-?[0-9]+))?;?$`)
 
+var _ types.Parser = (*ExecParser)(nil)
+
 type ExecParser struct{}
 
-func (f *ExecParser) AttemptParse(taskDefinition, nextCodeBlock string) (types.Task, error) {
+func (f *ExecParser) AttemptParse(scope, taskDefinition, nextCodeBlock string) (types.Task, error) {
 	if execMatch := taskExecToken.FindStringSubmatch(taskDefinition); len(execMatch) > 0 {
 		exitCode := 0
 		if execMatch[2] != "" {
@@ -25,7 +27,7 @@ func (f *ExecParser) AttemptParse(taskDefinition, nextCodeBlock string) (types.T
 			}
 		}
 
-		return tasks.NewExecTask(nextCodeBlock, exitCode), nil
+		return tasks.NewExecTask(scope, nextCodeBlock, exitCode), nil
 	}
 
 	return nil, nil

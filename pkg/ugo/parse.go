@@ -13,18 +13,14 @@ import (
 
 var (
 	suiteToken        = regexp.MustCompile(`<!--\s*test:suite=([^;]+?);?(weight=([0-9]+))?;?\s*-->`)
-	taskPrefixToken   = regexp.MustCompile(`<!--\s*test:(.*)\s*-->`)
+	taskPrefixToken   = regexp.MustCompile(`<!--\s*test:((setup|teardown):)?(.*)\s*-->`)
 	taskContentsToken = regexp.MustCompile(`(?s)\x60\x60\x60.*?\n(.+?)\n\x60\x60\x60`)
-	taskParsers       = []parser{
+	taskParsers       = []types.Parser{
 		&parsers.ExecParser{},
 		&parsers.FileParser{},
 		&parsers.AssertContainsParser{},
 	}
 )
-
-type parser interface {
-	AttemptParse(taskDefinition, nextCodeBlock string) (types.Task, error)
-}
 
 var NoSuiteError = errors.New("no suite found")
 
@@ -100,11 +96,16 @@ func parseTask(content string) (types.Task, error) {
 		return nil, nil
 	}
 
-	taskDefinition := strings.TrimSpace(content[taskSubmatch[2]:taskSubmatch[3]])
+	scope := types.ScopeDefault
+	if taskSubmatch[4] != -1 && taskSubmatch[5] != -1 {
+		scope = content[taskSubmatch[4]:taskSubmatch[5]]
+	}
+
+	taskDefinition := strings.TrimSpace(content[taskSubmatch[6]:taskSubmatch[7]])
 	contentAfterTask := content[taskSubmatch[1]:]
 
 	for _, taskParser := range taskParsers {
-		task, err := taskParser.AttemptParse(taskDefinition, parseCodeBlock(contentAfterTask))
+		task, err := taskParser.AttemptParse(scope, taskDefinition, parseCodeBlock(contentAfterTask))
 		if err != nil {
 			return nil, err
 		}

@@ -64,7 +64,7 @@ func executeExec(workDir string, task *tasks.ExecTask) (output string, err error
 
 	output = outBuf.String()
 	log.Printf("Output:\n%s", output)
-	if exitError, ok := err.(*exec.ExitError); ok {
+	if exitError, ok := err.(*exec.ExitError); err != nil && ok {
 		if exitCode == -1 || exitError.ExitCode() == exitCode {
 			return output, nil
 		}

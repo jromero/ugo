@@ -33,9 +33,14 @@ func Invoke(plan types.Plan) error {
 		}
 		log.Println("Working directory:", workDir)
 
+		orderedTasks := append(append(
+			suite.Tasks(types.ScopeSetup),
+			suite.Tasks(types.ScopeDefault)...),
+			suite.Tasks(types.ScopeTeardown)...)
+
 		var aggrOutput string
-		for i, task := range suite.Tasks() {
-			log.SetPrefix(fmt.Sprintf("[%s][task#%d] ", suite.Name(), i+1))
+		for i, task := range orderedTasks {
+			log.SetPrefix(fmt.Sprintf("[%s][#%d-%s:%s] ", suite.Name(), i+1, task.Scope(), task.Name()))
 			log.Printf("--> Running task #%d", i+1)
 
 			for _, invoker := range taskInvokers {

@@ -10,11 +10,13 @@ import (
 
 var taskFileToken = regexp.MustCompile(`^file=([^;]+);?$`)
 
+var _ types.Parser = (*FileParser)(nil)
+
 type FileParser struct{}
 
-func (f *FileParser) AttemptParse(taskDefinition, nextCodeBlock string) (types.Task, error) {
+func (f *FileParser) AttemptParse(scope, taskDefinition, nextCodeBlock string) (types.Task, error) {
 	if fileMatch := taskFileToken.FindStringSubmatch(taskDefinition); len(fileMatch) > 0 {
-		return tasks.NewFileTask(strings.TrimSpace(fileMatch[1]), nextCodeBlock), nil
+		return tasks.NewFileTask(scope, strings.TrimSpace(fileMatch[1]), nextCodeBlock), nil
 	}
 
 	return nil, nil

@@ -14,8 +14,14 @@ func (s Suite) Weight() int {
 	return s.weight
 }
 
-func (s Suite) Tasks() []Task {
-	return s.tasks
+func (s Suite) Tasks(scope string) []Task {
+	var tasks []Task
+	for _, task := range s.tasks {
+		if task.Scope() == scope {
+			tasks = append(tasks, task)
+		}
+	}
+	return tasks
 }
 
 func NewSuite(name string, weight int, tasks []Task) Suite {
