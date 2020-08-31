@@ -16,7 +16,7 @@ test-code:
 	go test -v ./...
 
 test-readme:
-	go run cmd/main.go run -p ./README.md
+	go run cmd/ugo/main.go run -p ./README.md
 
 test-examples:
-	go run cmd/main.go run -p ./docs/examples/
+	go run cmd/ugo/main.go run -p ./docs/examples/
