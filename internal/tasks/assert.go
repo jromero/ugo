@@ -1,8 +1,10 @@
 package tasks
 
-import "github.com/jromero/ugo/internal"
+import (
+	"github.com/jromero/ugo/internal/types"
+)
 
-var _ internal.Task = (*AssertContainsTask)(nil)
+var _ types.Task = (*AssertContainsTask)(nil)
 
 type AssertContainsTask struct {
 	expected string

@@ -6,15 +6,15 @@ import (
 	"regexp"
 	"strconv"
 
-	"github.com/jromero/ugo/internal"
 	"github.com/jromero/ugo/internal/tasks"
+	"github.com/jromero/ugo/internal/types"
 )
 
 var taskExecToken = regexp.MustCompile(`^exec;?(exit-code=(-?[0-9]+))?;?$`)
 
 type ExecParser struct{}
 
-func (f *ExecParser) AttemptParse(taskDefinition, nextCodeBlock string) (internal.Task, error) {
+func (f *ExecParser) AttemptParse(taskDefinition, nextCodeBlock string) (types.Task, error) {
 	if execMatch := taskExecToken.FindStringSubmatch(taskDefinition); len(execMatch) > 0 {
 		exitCode := 0
 		if execMatch[2] != "" {

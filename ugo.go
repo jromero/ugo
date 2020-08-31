@@ -1,6 +1,8 @@
 package ugo
 
-import "github.com/jromero/ugo/internal"
+import (
+	"github.com/jromero/ugo/internal/types"
+)
 
 type Plan struct {
 	suites []Suite
@@ -13,9 +15,9 @@ func NewPlan(suites []Suite) *Plan {
 type Suite struct {
 	name   string
 	weight int
-	tasks  []internal.Task
+	tasks  []types.Task
 }
 
-func NewSuite(name string, weight int, tasks []internal.Task) *Suite {
+func NewSuite(name string, weight int, tasks []types.Task) *Suite {
 	return &Suite{name: name, weight: weight, tasks: tasks}
 }

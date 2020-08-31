@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/jromero/ugo/internal"
 	"github.com/jromero/ugo/internal/parsers"
+	"github.com/jromero/ugo/internal/types"
 )
 
 var (
@@ -23,7 +23,7 @@ var (
 )
 
 type parser interface {
-	AttemptParse(taskDefinition, nextCodeBlock string) (internal.Task, error)
+	AttemptParse(taskDefinition, nextCodeBlock string) (types.Task, error)
 }
 
 var NoSuiteError = errors.New("no suite found")
@@ -39,7 +39,7 @@ func Parse(content string) (Plan, error) {
 	for i, suiteSubmatch := range suiteSubmatches {
 		var (
 			name   = content[suiteSubmatch[2]:suiteSubmatch[3]]
-			tasks  []internal.Task
+			tasks  []types.Task
 			weight int
 			err    error
 		)
@@ -53,7 +53,7 @@ func Parse(content string) (Plan, error) {
 		}
 
 		// if there is a next suite only search within current section
-		var additionalTasks []internal.Task
+		var additionalTasks []types.Task
 		if i+1 < len(suiteSubmatches) {
 			additionalTasks, err = parseTasks(content[suiteSubmatch[1]:suiteSubmatches[i+1][0]])
 		} else {
@@ -69,11 +69,11 @@ func Parse(content string) (Plan, error) {
 	return *NewPlan(aggregateSuites(suites)), nil
 }
 
-func parseTasks(content string) (tasks []internal.Task, err error) {
+func parseTasks(content string) (tasks []types.Task, err error) {
 	if taskSubmatches := taskPrefixToken.FindAllStringSubmatchIndex(content, -1); len(taskSubmatches) > 0 {
 		for i, taskSubmatch := range taskSubmatches {
 			// if there is a next task only search within current section
-			var task internal.Task
+			var task types.Task
 			if i+1 < len(taskSubmatches) {
 				task, err = parseTask(content[taskSubmatch[0]:taskSubmatches[i+1][0]])
 				if err != nil {
@@ -94,7 +94,7 @@ func parseTasks(content string) (tasks []internal.Task, err error) {
 	return tasks, nil
 }
 
-func parseTask(content string) (internal.Task, error) {
+func parseTask(content string) (types.Task, error) {
 	taskSubmatch := taskPrefixToken.FindStringSubmatchIndex(content)
 	if len(taskSubmatch) == 0 {
 		return nil, nil

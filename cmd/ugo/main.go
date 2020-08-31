@@ -76,7 +76,7 @@ func main() {
 				return
 			}
 
-			err = ugo.Execute(ugo.Aggregate(plans...))
+			err = ugo.Invoke(ugo.Aggregate(plans...))
 			if err != nil {
 				fatalError(3, err.Error())
 			}

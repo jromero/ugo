@@ -1,8 +1,10 @@
 package tasks
 
-import "github.com/jromero/ugo/internal"
+import (
+	"github.com/jromero/ugo/internal/types"
+)
 
-var _ internal.Task = (*FileTask)(nil)
+var _ types.Task = (*FileTask)(nil)
 
 type FileTask struct {
 	filename string
