@@ -2,7 +2,9 @@
 
 A **testing framework** for your tutorials.
 
-Are you tired of manually testing your tutorials to make sure the steps actually work? Are they broken or outdated? 
+<img src="https://i.imgflip.com/4ddj1y.jpg" width="400" />
+
+Are your tutorials constantly broken or outdated? Are you tired of manually testing your tutorials to make sure the steps actually work?
 
 Fear no more! **Ugo** is here to help automate that!
 
