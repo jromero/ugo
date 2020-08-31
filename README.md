@@ -27,6 +27,13 @@ Here's a quick look at what that may look like.
 
 <!-- test:suite=my-tutorial -->
 
+<!-- test:teardown:exec -->
+<!--
+```
+rm some-file.txt
+```
+-->
+
 First, let's create a file `some-file.txt` with the following content:
 
 <!-- test:file=some-file.txt -->
@@ -60,19 +67,24 @@ ugo run
 
 ```text
 [my-tutorial] Suite 'my-tutorial' executing...
-[my-tutorial] Working directory: /var/folders/nx/x67fz2nj5hv_w43gn5h019hh0000gn/T/suite-my-tutorial-297835053
-[my-tutorial][task#1] --> Running task #1
-[my-tutorial][task#1] Writing file (some-file.txt) with contents:
+[my-tutorial] Working directory: /var/folders/nx/x67fz2nj5hv_w43gn5h019hh0000gn/T/suite-my-tutorial-635763397
+[my-tutorial][#1-default:file] --> Running task #1
+[my-tutorial][#1-default:file] Writing file (some-file.txt) with contents:
 some content
-[my-tutorial][task#2] --> Running task #2
-[my-tutorial][task#2] Executing the following:
+[my-tutorial][#2-default:exec] --> Running task #2
+[my-tutorial][#2-default:exec] Executing the following:
 cat some-file.txt
-[my-tutorial][task#2] Output:
+[my-tutorial][#2-default:exec] Output:
 some content
-[my-tutorial][task#3] --> Running task #3
-[my-tutorial][task#3] Checking that output contained:
+[my-tutorial][#3-default:assert:contains] --> Running task #3
+[my-tutorial][#3-default:assert:contains] Checking that output contained:
 some content
+[my-tutorial][#4-teardown:exec] --> Running task #4
+[my-tutorial][#4-teardown:exec] Executing the following:
+rm some-file.txt
+[my-tutorial][#4-teardown:exec] Output:
 Nothing broken. Good job!
+
 ```
 
 For more, check out these [examples](docs/examples).
