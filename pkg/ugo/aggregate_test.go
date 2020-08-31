@@ -1,4 +1,4 @@
-package pkg_test
+package ugo_test
 
 import (
 	"io/ioutil"
@@ -8,15 +8,15 @@ import (
 	"github.com/sclevine/spec"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/jromero/ugo/pkg"
-	"github.com/jromero/ugo/pkg/internal/tasks"
-	"github.com/jromero/ugo/pkg/types"
+	"github.com/jromero/ugo/pkg/ugo"
+	"github.com/jromero/ugo/pkg/ugo/internal/tasks"
+	"github.com/jromero/ugo/pkg/ugo/types"
 )
 
 func TestAggregate(t *testing.T) {
 	spec.Run(t, "#Aggregate", func(t *testing.T, when spec.G, it spec.S) {
 		when("cross-file-tutorial", func() {
-			it.Focus("should rely on weight, not filename", func() {
+			it("should rely on weight, not filename", func() {
 				tutorialDir := filepath.Join("testdata", "cross-file-tutorial")
 
 				fileInfos, err := ioutil.ReadDir(tutorialDir)
@@ -28,14 +28,14 @@ func TestAggregate(t *testing.T) {
 						bytes, err := ioutil.ReadFile(filepath.Join(tutorialDir, fileInfo.Name()))
 						assert.Nil(t, err)
 
-						p, err := pkg.Parse(string(bytes))
+						p, err := ugo.Parse(string(bytes))
 						assert.Nil(t, err)
 
 						plans = append(plans, p)
 					}
 				}
 
-				plan := pkg.Aggregate(plans...)
+				plan := ugo.Aggregate(plans...)
 				assert.Equal(t, types.NewPlan([]types.Suite{types.NewSuite("cross-file-tutorial", 1, []types.Task{
 					tasks.NewExecTask("echo hello 1", 0),
 					tasks.NewExecTask("echo hello 2", 0),

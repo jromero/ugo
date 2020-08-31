@@ -1,9 +1,9 @@
-package pkg
+package ugo
 
 import (
 	"sort"
 
-	"github.com/jromero/ugo/pkg/types"
+	"github.com/jromero/ugo/pkg/ugo/types"
 )
 
 func Aggregate(plans ...types.Plan) types.Plan {

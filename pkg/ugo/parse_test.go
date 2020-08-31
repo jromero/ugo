@@ -1,4 +1,4 @@
-package pkg_test
+package ugo_test
 
 import (
 	"testing"
@@ -6,9 +6,9 @@ import (
 	"github.com/sclevine/spec"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/jromero/ugo/pkg"
-	"github.com/jromero/ugo/pkg/internal/tasks"
-	"github.com/jromero/ugo/pkg/types"
+	"github.com/jromero/ugo/pkg/ugo"
+	"github.com/jromero/ugo/pkg/ugo/internal/tasks"
+	"github.com/jromero/ugo/pkg/ugo/types"
 )
 
 func TestParse(t *testing.T) {
@@ -16,7 +16,7 @@ func TestParse(t *testing.T) {
 
 		when("suite", func() {
 			it("parses suite", func() {
-				plan, err := pkg.Parse(`
+				plan, err := ugo.Parse(`
 <!-- test:suite=test1;weight=1 -->
 `)
 				assert.Nil(t, err)
@@ -24,13 +24,13 @@ func TestParse(t *testing.T) {
 			})
 
 			it("no suite found", func() {
-				_, err := pkg.Parse(`some content without a suite definition`)
+				_, err := ugo.Parse(`some content without a suite definition`)
 				assert.EqualError(t, err, "no suite found")
 			})
 
 			it("multiple suites (are ordered)", func() {
 				plan, err :=
-					pkg.Parse(`
+					ugo.Parse(`
 <!-- test:suite=test1;weight=1 -->
 <!-- test:exec -->
 ` + "```shell bash" + `
@@ -66,7 +66,7 @@ echo "hello #3"!
 
 			it("multiple suites (aggregated based on weight)", func() {
 				plan, err :=
-					pkg.Parse(`
+					ugo.Parse(`
 <!-- test:suite=test1;weight=2 -->
 <!-- test:exec -->
 ` + "```shell bash" + `
@@ -101,7 +101,7 @@ echo "hello #3"!
 		when("tasks", func() {
 			when("unknown task type", func() {
 				it("errors", func() {
-					_, err := pkg.Parse(`
+					_, err := ugo.Parse(`
 <!-- test:suite=test1 -->
 
 <!-- test:some-other-value -->
@@ -115,7 +115,7 @@ echo "hello #1"!
 
 			when("file", func() {
 				it("file task is parsed", func() {
-					plan, err := pkg.Parse(`
+					plan, err := ugo.Parse(`
 <!-- test:suite=test1;weight=1 -->
 <!-- test:file=some-file -->
 ` + "```" + `
@@ -133,7 +133,7 @@ some-content
 
 			when("exec", func() {
 				it("is parsed", func() {
-					plan, err := pkg.Parse(`
+					plan, err := ugo.Parse(`
 <!-- test:suite=test1 -->
 	
 <!-- test:exec -->
@@ -150,7 +150,7 @@ echo "hello"!
 				})
 
 				it("parses exit code", func() {
-					plan, err := pkg.Parse(`
+					plan, err := ugo.Parse(`
 <!-- test:suite=test1 -->
 	
 <!-- test:exec;exit-code=1 -->
@@ -167,7 +167,7 @@ exit 1
 				})
 
 				it("parses exit code (-1)", func() {
-					plan, err := pkg.Parse(`
+					plan, err := ugo.Parse(`
 <!-- test:suite=test1 -->
 	
 <!-- test:exec;exit-code=-1 -->
@@ -187,7 +187,7 @@ exit 99
 			when("assertion", func() {
 				when("contains", func() {
 					it("is parsed", func() {
-						plan, err := pkg.Parse(`
+						plan, err := ugo.Parse(`
 <!-- test:suite=test1 -->
 	
 <!-- test:assert=contains -->
@@ -207,7 +207,7 @@ some-output
 
 			it("multiple tasks", func() {
 				plan, err :=
-					pkg.Parse(`
+					ugo.Parse(`
 <!-- test:suite=test1 -->
 
 <!-- test:file=some-file -->
@@ -232,7 +232,7 @@ echo "hello"!
 			})
 
 			it("multiple code blocks after task", func() {
-				plan, err := pkg.Parse(`
+				plan, err := ugo.Parse(`
 <!-- test:suite=test1 -->
 	
 <!-- test:exec -->

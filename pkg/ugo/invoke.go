@@ -1,12 +1,12 @@
-package pkg
+package ugo
 
 import (
 	"fmt"
 	"io/ioutil"
 	"log"
 
-	"github.com/jromero/ugo/pkg/internal/invokers"
-	"github.com/jromero/ugo/pkg/types"
+	"github.com/jromero/ugo/pkg/ugo/internal/invokers"
+	"github.com/jromero/ugo/pkg/ugo/types"
 )
 
 var taskInvokers = []types.Invoker{

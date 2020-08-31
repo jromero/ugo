@@ -8,8 +8,8 @@ import (
 
 	"github.com/thatisuday/commando"
 
-	"github.com/jromero/ugo/pkg"
-	"github.com/jromero/ugo/pkg/types"
+	"github.com/jromero/ugo/pkg/ugo"
+	"github.com/jromero/ugo/pkg/ugo/types"
 )
 
 type cliArgs = map[string]commando.ArgValue
@@ -60,9 +60,9 @@ func main() {
 					fatalError(2, err.Error())
 				}
 
-				p, err := pkg.Parse(string(content))
+				p, err := ugo.Parse(string(content))
 				if err != nil {
-					if err == pkg.NoSuiteError {
+					if err == ugo.NoSuiteError {
 						continue
 					}
 
@@ -77,7 +77,7 @@ func main() {
 				return
 			}
 
-			err = pkg.Invoke(pkg.Aggregate(plans...))
+			err = ugo.Invoke(ugo.Aggregate(plans...))
 			if err != nil {
 				fatalError(3, err.Error())
 			}

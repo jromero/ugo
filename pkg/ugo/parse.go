@@ -1,4 +1,4 @@
-package pkg
+package ugo
 
 import (
 	"errors"
@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/jromero/ugo/pkg/internal/parsers"
-	"github.com/jromero/ugo/pkg/types"
+	"github.com/jromero/ugo/pkg/ugo/internal/parsers"
+	"github.com/jromero/ugo/pkg/ugo/types"
 )
 
 var (
