@@ -6,16 +6,25 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/jromero/ugo/internal"
+	"github.com/jromero/ugo/internal/parsers"
 )
 
 var (
-	suiteToken              = regexp.MustCompile(`<!--\s*test:suite=([^;]+?);?(weight=([0-9]+))?;?\s*-->`)
-	taskPrefixToken         = regexp.MustCompile(`<!--\s*test:(.*)\s*-->`)
-	taskFileToken           = regexp.MustCompile(`^file=([^;]+);?$`)
-	taskExecToken           = regexp.MustCompile(`^exec;?(exit-code=(-?[0-9]+))?;?$`)
-	taskAssertContainsToken = regexp.MustCompile(`^assert=contains;?$`)
-	taskContentsToken       = regexp.MustCompile(`(?s)\x60\x60\x60.*?\n(.+?)\n\x60\x60\x60`)
+	suiteToken        = regexp.MustCompile(`<!--\s*test:suite=([^;]+?);?(weight=([0-9]+))?;?\s*-->`)
+	taskPrefixToken   = regexp.MustCompile(`<!--\s*test:(.*)\s*-->`)
+	taskContentsToken = regexp.MustCompile(`(?s)\x60\x60\x60.*?\n(.+?)\n\x60\x60\x60`)
+	taskParsers       = []parser{
+		&parsers.ExecParser{},
+		&parsers.FileParser{},
+		&parsers.AssertContainsParser{},
+	}
 )
+
+type parser interface {
+	AttemptParse(taskDefinition, nextCodeBlock string) (internal.Task, error)
+}
 
 var NoSuiteError = errors.New("no suite found")
 
@@ -30,7 +39,7 @@ func Parse(content string) (Plan, error) {
 	for i, suiteSubmatch := range suiteSubmatches {
 		var (
 			name   = content[suiteSubmatch[2]:suiteSubmatch[3]]
-			tasks  []Task
+			tasks  []internal.Task
 			weight int
 			err    error
 		)
@@ -44,7 +53,7 @@ func Parse(content string) (Plan, error) {
 		}
 
 		// if there is a next suite only search within current section
-		var additionalTasks []Task
+		var additionalTasks []internal.Task
 		if i+1 < len(suiteSubmatches) {
 			additionalTasks, err = parseTasks(content[suiteSubmatch[1]:suiteSubmatches[i+1][0]])
 		} else {
@@ -60,11 +69,11 @@ func Parse(content string) (Plan, error) {
 	return *NewPlan(aggregateSuites(suites)), nil
 }
 
-func parseTasks(content string) (tasks []Task, err error) {
+func parseTasks(content string) (tasks []internal.Task, err error) {
 	if taskSubmatches := taskPrefixToken.FindAllStringSubmatchIndex(content, -1); len(taskSubmatches) > 0 {
 		for i, taskSubmatch := range taskSubmatches {
 			// if there is a next task only search within current section
-			var task *Task
+			var task internal.Task
 			if i+1 < len(taskSubmatches) {
 				task, err = parseTask(content[taskSubmatch[0]:taskSubmatches[i+1][0]])
 				if err != nil {
@@ -77,12 +86,35 @@ func parseTasks(content string) (tasks []Task, err error) {
 				}
 			}
 			if task != nil {
-				tasks = append(tasks, *task)
+				tasks = append(tasks, task)
 			}
 		}
 	}
 
 	return tasks, nil
+}
+
+func parseTask(content string) (internal.Task, error) {
+	taskSubmatch := taskPrefixToken.FindStringSubmatchIndex(content)
+	if len(taskSubmatch) == 0 {
+		return nil, nil
+	}
+
+	taskDefinition := strings.TrimSpace(content[taskSubmatch[2]:taskSubmatch[3]])
+	contentAfterTask := content[taskSubmatch[1]:]
+
+	for _, taskParser := range taskParsers {
+		task, err := taskParser.AttemptParse(taskDefinition, parseCodeBlock(contentAfterTask))
+		if err != nil {
+			return nil, err
+		}
+
+		if task != nil {
+			return task, nil
+		}
+	}
+
+	return nil, fmt.Errorf("unknown task '%s'", taskDefinition)
 }
 
 // parseCodeBlock parses the first instance of a code block and returns it's content
@@ -93,33 +125,4 @@ func parseCodeBlock(content string) string {
 	}
 
 	return taskContentsSubmatch[1]
-}
-
-func parseTask(content string) (*Task, error) {
-	taskSubmatch := taskPrefixToken.FindStringSubmatchIndex(content)
-	if len(taskSubmatch) == 0 {
-		return nil, nil
-	}
-
-	taskDefinition := strings.TrimSpace(content[taskSubmatch[2]:taskSubmatch[3]])
-
-	// determine type
-	if fileMatch := taskFileToken.FindStringSubmatch(taskDefinition); len(fileMatch) > 0 {
-		return NewFileTask(strings.TrimSpace(fileMatch[1]), parseCodeBlock(content[taskSubmatch[1]:])), nil
-	} else if execMatch := taskExecToken.FindStringSubmatch(taskDefinition); len(execMatch) > 0 {
-		exitCode := 0
-		if execMatch[2] != "" {
-			var err error
-			exitCode, err = strconv.Atoi(execMatch[2])
-			if err != nil {
-				return nil, errors.New(fmt.Sprintf("parsing weight: %s: %s", execMatch[2], err.Error()))
-			}
-		}
-
-		return NewExecTask(parseCodeBlock(content[taskSubmatch[1]:]), exitCode), nil
-	} else if taskAssertContainsToken.MatchString(taskDefinition) {
-		return NewAssertContainsTask(parseCodeBlock(content[taskSubmatch[1]:])), nil
-	}
-
-	return nil, fmt.Errorf("unknown task '%s'", taskDefinition)
 }

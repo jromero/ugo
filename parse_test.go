@@ -7,6 +7,8 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/jromero/ugo"
+	"github.com/jromero/ugo/internal"
+	"github.com/jromero/ugo/internal/tasks"
 )
 
 func TestParse(t *testing.T) {
@@ -48,14 +50,14 @@ echo "hello #3"!
 				assert.Nil(t, err)
 
 				expected := *ugo.NewPlan([]ugo.Suite{
-					*ugo.NewSuite("test1", 1, []ugo.Task{
-						*ugo.NewExecTask(`echo "hello #1"!`, 0),
+					*ugo.NewSuite("test1", 1, []internal.Task{
+						tasks.NewExecTask(`echo "hello #1"!`, 0),
 					}),
-					*ugo.NewSuite("test3", 2, []ugo.Task{
-						*ugo.NewExecTask(`echo "hello #3"!`, 0),
+					*ugo.NewSuite("test3", 2, []internal.Task{
+						tasks.NewExecTask(`echo "hello #3"!`, 0),
 					}),
-					*ugo.NewSuite("test2", 3, []ugo.Task{
-						*ugo.NewExecTask(`echo "hello #2"!`, 0),
+					*ugo.NewSuite("test2", 3, []internal.Task{
+						tasks.NewExecTask(`echo "hello #2"!`, 0),
 					}),
 				})
 
@@ -84,12 +86,12 @@ echo "hello #3"!
 				assert.Nil(t, err)
 
 				expected := *ugo.NewPlan([]ugo.Suite{
-					*ugo.NewSuite("test1", 2, []ugo.Task{
-						*ugo.NewExecTask(`echo "hello #3"!`, 0),
-						*ugo.NewExecTask(`echo "hello #1"!`, 0),
+					*ugo.NewSuite("test1", 2, []internal.Task{
+						tasks.NewExecTask(`echo "hello #3"!`, 0),
+						tasks.NewExecTask(`echo "hello #1"!`, 0),
 					}),
-					*ugo.NewSuite("test2", 3, []ugo.Task{
-						*ugo.NewExecTask(`echo "hello #2"!`, 0),
+					*ugo.NewSuite("test2", 3, []internal.Task{
+						tasks.NewExecTask(`echo "hello #2"!`, 0),
 					}),
 				})
 				assert.Equal(t, expected, plan)
@@ -122,8 +124,8 @@ some-content
 `)
 					assert.Nil(t, err)
 
-					expected := *ugo.NewPlan([]ugo.Suite{*ugo.NewSuite("test1", 1, []ugo.Task{
-						*ugo.NewFileTask("some-file", "some-content"),
+					expected := *ugo.NewPlan([]ugo.Suite{*ugo.NewSuite("test1", 1, []internal.Task{
+						tasks.NewFileTask("some-file", "some-content"),
 					})})
 					assert.Equal(t, expected, plan)
 				})
@@ -141,8 +143,8 @@ echo "hello"!
 `)
 					assert.Nil(t, err)
 
-					expected := *ugo.NewPlan([]ugo.Suite{*ugo.NewSuite("test1", 0, []ugo.Task{
-						*ugo.NewExecTask(`echo "hello"!`, 0),
+					expected := *ugo.NewPlan([]ugo.Suite{*ugo.NewSuite("test1", 0, []internal.Task{
+						tasks.NewExecTask(`echo "hello"!`, 0),
 					})})
 					assert.Equal(t, expected, plan)
 				})
@@ -158,8 +160,8 @@ exit 1
 `)
 					assert.Nil(t, err)
 
-					expected := *ugo.NewPlan([]ugo.Suite{*ugo.NewSuite("test1", 0, []ugo.Task{
-						*ugo.NewExecTask(`exit 1`, 1),
+					expected := *ugo.NewPlan([]ugo.Suite{*ugo.NewSuite("test1", 0, []internal.Task{
+						tasks.NewExecTask(`exit 1`, 1),
 					})})
 					assert.Equal(t, expected, plan)
 				})
@@ -175,8 +177,8 @@ exit 99
 `)
 					assert.Nil(t, err)
 
-					expected := *ugo.NewPlan([]ugo.Suite{*ugo.NewSuite("test1", 0, []ugo.Task{
-						*ugo.NewExecTask(`exit 99`, -1),
+					expected := *ugo.NewPlan([]ugo.Suite{*ugo.NewSuite("test1", 0, []internal.Task{
+						tasks.NewExecTask(`exit 99`, -1),
 					})})
 					assert.Equal(t, expected, plan)
 				})
@@ -195,8 +197,8 @@ some-output
 `)
 						assert.Nil(t, err)
 
-						expected := *ugo.NewPlan([]ugo.Suite{*ugo.NewSuite("test1", 0, []ugo.Task{
-							*ugo.NewAssertContainsTask(`some-output`),
+						expected := *ugo.NewPlan([]ugo.Suite{*ugo.NewSuite("test1", 0, []internal.Task{
+							tasks.NewAssertContainsTask(`some-output`),
 						})})
 						assert.Equal(t, expected, plan)
 					})
@@ -221,9 +223,9 @@ echo "hello"!
 `)
 				assert.Nil(t, err)
 
-				expected := *ugo.NewPlan([]ugo.Suite{*ugo.NewSuite("test1", 0, []ugo.Task{
-					*ugo.NewFileTask("some-file", "[root]\nkey=value"),
-					*ugo.NewExecTask(`echo "hello"!`, 0),
+				expected := *ugo.NewPlan([]ugo.Suite{*ugo.NewSuite("test1", 0, []internal.Task{
+					tasks.NewFileTask("some-file", "[root]\nkey=value"),
+					tasks.NewExecTask(`echo "hello"!`, 0),
 				})})
 
 				assert.Equal(t, expected, plan)
@@ -244,8 +246,8 @@ echo "hello #2"!
 `)
 				assert.Nil(t, err)
 
-				expected := *ugo.NewPlan([]ugo.Suite{*ugo.NewSuite("test1", 0, []ugo.Task{
-					*ugo.NewExecTask(`echo "hello #1"!`, 0),
+				expected := *ugo.NewPlan([]ugo.Suite{*ugo.NewSuite("test1", 0, []internal.Task{
+					tasks.NewExecTask(`echo "hello #1"!`, 0),
 				})})
 				assert.Equal(t, expected, plan)
 			})

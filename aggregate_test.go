@@ -9,6 +9,8 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/jromero/ugo"
+	"github.com/jromero/ugo/internal"
+	"github.com/jromero/ugo/internal/tasks"
 )
 
 func TestAggregate(t *testing.T) {
@@ -34,10 +36,10 @@ func TestAggregate(t *testing.T) {
 				}
 
 				plan := ugo.Aggregate(plans...)
-				assert.Equal(t, *ugo.NewPlan([]ugo.Suite{*ugo.NewSuite("cross-file-tutorial", 1, []ugo.Task{
-					*ugo.NewExecTask("echo hello 1", 0),
-					*ugo.NewExecTask("echo hello 2", 0),
-					*ugo.NewExecTask("echo hello 3", 0),
+				assert.Equal(t, *ugo.NewPlan([]ugo.Suite{*ugo.NewSuite("cross-file-tutorial", 1, []internal.Task{
+					tasks.NewExecTask("echo hello 1", 0),
+					tasks.NewExecTask("echo hello 2", 0),
+					tasks.NewExecTask("echo hello 3", 0),
 				})}), plan)
 			})
 		})

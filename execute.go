@@ -12,6 +12,9 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/jromero/ugo/internal"
+	"github.com/jromero/ugo/internal/tasks"
 )
 
 func Execute(plan Plan) error {
@@ -50,27 +53,27 @@ func Execute(plan Plan) error {
 
 var ansiPattern = regexp.MustCompile("[\u001B\u009B][[\\]()#;?]*(?:(?:(?:[a-zA-Z\\d]*(?:;[a-zA-Z\\d]*)*)?\u0007)|(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PRZcf-ntqry=><~]))")
 
-func executeTask(priorOutput, workDir string, index int, task Task) (output string, err error) {
-	switch task.Type() {
-	case TypeFile:
-		err = executeFile(workDir, task)
-	case TypeExec:
-		output, err = executeExec(workDir, task)
-	case TypeAssertContains:
-		err = executeAssertContains(priorOutput, task)
+func executeTask(priorOutput, workDir string, index int, task internal.Task) (output string, err error) {
+	switch task.(type) {
+	case *tasks.FileTask:
+		err = executeFile(workDir, task.(*tasks.FileTask))
+	case *tasks.ExecTask:
+		output, err = executeExec(workDir, task.(*tasks.ExecTask))
+	case *tasks.AssertContainsTask:
+		err = executeAssertContains(priorOutput, task.(*tasks.AssertContainsTask))
 	default:
-		err = errors.New("unknown task: " + task.Type())
+		err = errors.New("unknown task: " + task.Name())
 	}
 
 	if err != nil {
-		return output, fmt.Errorf("%s task #%d failed: %s", task.Type(), index, err)
+		return output, fmt.Errorf("task #%d (%s) failed: %s", index, task.Name(), err)
 	}
 
 	return output, nil
 }
 
-func executeAssertContains(priorOutput string, task Task) error {
-	expected := task.contents
+func executeAssertContains(priorOutput string, task *tasks.AssertContainsTask) error {
+	expected := task.Expected()
 	log.Printf("Checking that output contained:\n%s", expected)
 	if !strings.Contains(ansiPattern.ReplaceAllString(priorOutput, ""), expected) {
 		return fmt.Errorf("no output contained:\n%s", expected)
@@ -79,29 +82,22 @@ func executeAssertContains(priorOutput string, task Task) error {
 	return nil
 }
 
-func executeFile(workDir string, task Task) error {
-	var filename string
-	if f, ok := task.attr[AttrFilename]; ok {
-		if f2, ok := f.(string); ok {
-			filename = f2
-		}
-	}
-
-	if filename == "" {
+func executeFile(workDir string, task *tasks.FileTask) error {
+	if task.Filename() == "" {
 		return errors.New("filename for a file task must be provided")
 	}
 
-	log.Printf("Writing file (%s) with contents:\n%s", filename, task.contents)
-	return ioutil.WriteFile(filepath.Join(workDir, fmt.Sprintf("%v", filename)), []byte(task.contents), os.ModePerm)
+	log.Printf("Writing file (%s) with contents:\n%s", task.Filename(), task.Contents())
+	return ioutil.WriteFile(filepath.Join(workDir, fmt.Sprintf("%v", task.Filename())), []byte(task.Contents()), os.ModePerm)
 }
 
-func executeExec(workDir string, task Task) (output string, err error) {
-	tmpScript := filepath.Join(workDir, fmt.Sprintf(".script-%x", sha256.Sum256([]byte(task.contents))))
+func executeExec(workDir string, task *tasks.ExecTask) (output string, err error) {
+	tmpScript := filepath.Join(workDir, fmt.Sprintf(".script-%x", sha256.Sum256([]byte(task.Contents()))))
 	defer os.Remove(tmpScript)
 
-	exitCode := task.attr[AttrExitCode].(int)
+	exitCode := task.ExitCode()
 
-	err = ioutil.WriteFile(tmpScript, []byte(task.contents), os.ModePerm)
+	err = ioutil.WriteFile(tmpScript, []byte(task.Contents()), os.ModePerm)
 	if err != nil {
 		return output, err
 	}
@@ -127,7 +123,7 @@ func executeExec(workDir string, task Task) (output string, err error) {
 		Stderr: &outBuf,
 	}
 
-	log.Printf("Executing the following:\n%s", task.contents)
+	log.Printf("Executing the following:\n%s", task.Contents())
 	err = cmd.Run()
 
 	output = outBuf.String()
