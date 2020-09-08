@@ -202,6 +202,25 @@ some-output
 						})})
 						assert.Equal(t, expected, plan)
 					})
+
+					it("is parsed (w/ ignore-lines)", func() {
+						plan, err := ugo.Parse(`
+<!-- test:suite=test1 -->
+	
+<!-- test:assert=contains;ignore-lines=...; -->
+` + "```text" + `
+some-output
+...
+test
+` + "```" + `
+`)
+						assert.Nil(t, err)
+
+						expected := types.NewPlan([]types.Suite{types.NewSuite("test1", 0, []types.Task{
+							tasks.NewAssertContainsTask(types.ScopeDefault, "some-output\n...\ntest", tasks.WithIgnoreLines("...")),
+						})})
+						assert.Equal(t, expected, plan)
+					})
 				})
 			})
 

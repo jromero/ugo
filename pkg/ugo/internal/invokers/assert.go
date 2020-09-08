@@ -28,9 +28,25 @@ func (a *AssertInvoker) Invoke(task types.Task, _, prevOutput string) (output st
 
 func executeAssertContains(priorOutput string, task *tasks.AssertContainsTask) error {
 	expected := task.Expected()
-	log.Printf("Checking that output contained:\n%s", expected)
-	if !strings.Contains(ansiPattern.ReplaceAllString(priorOutput, ""), expected) {
-		return fmt.Errorf("no output contained:\n%s", expected)
+
+	sanitized := ansiPattern.ReplaceAllString(priorOutput, "")
+	if task.IgnoreLines() != "" {
+		rx := regexp.MustCompile(fmt.Sprintf(`(?m)^%s(\n|$)`, regexp.QuoteMeta(task.IgnoreLines())))
+		expected = rx.ReplaceAllString(expected, "~~WILDCARD~~${1}")
+		expected = strings.ReplaceAll(expected, "~~WILDCARD~~", ".*")
+		expected = "(?ms).*" + expected + ".*"
+
+		log.Printf("Checking that output matches:\n%s", expected)
+
+		if !regexp.MustCompile(expected).MatchString(sanitized) {
+			return fmt.Errorf("output didn't match:\n%s", expected)
+		}
+	} else {
+		log.Printf("Checking that output contained:\n%s", expected)
+
+		if !strings.Contains(sanitized, expected) {
+			return fmt.Errorf("no output contained:\n%s", expected)
+		}
 	}
 
 	return nil
