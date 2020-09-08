@@ -7,15 +7,20 @@ import (
 	"github.com/jromero/ugo/pkg/ugo/types"
 )
 
-var taskAssertContainsToken = regexp.MustCompile(`^assert=contains;?$`)
+var taskAssertContainsToken = regexp.MustCompile(`^assert=contains;?(ignore-lines=([^;]+))?;?$`)
 
 var _ types.Parser = (*AssertContainsParser)(nil)
 
 type AssertContainsParser struct{}
 
 func (a *AssertContainsParser) AttemptParse(scope, taskDefinition, nextCodeBlock string) (types.Task, error) {
-	if taskAssertContainsToken.MatchString(taskDefinition) {
-		return tasks.NewAssertContainsTask(scope, nextCodeBlock), nil
+	if execMatch := taskAssertContainsToken.FindStringSubmatch(taskDefinition); len(execMatch) > 0 {
+		ignoreLines := ""
+		if execMatch[2] != "" {
+			ignoreLines = execMatch[2]
+		}
+
+		return tasks.NewAssertContainsTask(scope, nextCodeBlock, tasks.WithIgnoreLines(ignoreLines)), nil
 	}
 
 	return nil, nil

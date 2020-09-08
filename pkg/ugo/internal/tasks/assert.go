@@ -7,12 +7,18 @@ import (
 var _ types.Task = (*AssertContainsTask)(nil)
 
 type AssertContainsTask struct {
-	expected string
-	scope    string
+	scope       string
+	expected    string
+	ignoreLines string
 }
 
-func NewAssertContainsTask(scope, expected string) *AssertContainsTask {
-	return &AssertContainsTask{expected: expected, scope: scope}
+func NewAssertContainsTask(scope, expected string, opts ...func(task *AssertContainsTask)) *AssertContainsTask {
+	task := &AssertContainsTask{expected: expected, scope: scope}
+	for _, opt := range opts {
+		opt(task)
+	}
+
+	return task
 }
 
 func (a *AssertContainsTask) Name() string {
@@ -25,4 +31,14 @@ func (a *AssertContainsTask) Scope() string {
 
 func (a *AssertContainsTask) Expected() string {
 	return a.expected
+}
+
+func (a *AssertContainsTask) IgnoreLines() string {
+	return a.ignoreLines
+}
+
+func WithIgnoreLines(chars string) func(task *AssertContainsTask) {
+	return func(task *AssertContainsTask) {
+		task.ignoreLines = chars
+	}
 }
