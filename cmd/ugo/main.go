@@ -18,7 +18,7 @@ type cliFlags = map[string]commando.FlagValue
 func main() {
 	commando.
 		SetExecutableName("ugo").
-		SetVersion("0.0.1").
+		SetVersion(ugo.Version).
 		SetDescription("Ugo helps you execute and test your tutorials.")
 
 	commando.
