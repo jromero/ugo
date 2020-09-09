@@ -32,7 +32,7 @@ func executeAssertContains(priorOutput string, task *tasks.AssertContainsTask) e
 	sanitized := ansiPattern.ReplaceAllString(priorOutput, "")
 	if task.IgnoreLines() != "" {
 		rx := regexp.MustCompile(fmt.Sprintf(`(?m)^%s(\n|$)`, regexp.QuoteMeta(task.IgnoreLines())))
-		expected = rx.ReplaceAllString(expected, "~~WILDCARD~~${1}")
+		expected = regexp.QuoteMeta(rx.ReplaceAllString(expected, "~~WILDCARD~~${1}"))
 		expected = strings.ReplaceAll(expected, "~~WILDCARD~~", ".*")
 		expected = "(?ms).*" + expected + ".*"
 

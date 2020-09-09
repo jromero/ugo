@@ -48,7 +48,29 @@ line 3...
 line 2
 line 3`)
 
-				assert.EqualError(t, err, "output didn't match:\n(?ms).*line 1\n...line 2\nline 3...\n.*")
+				assert.EqualError(t, err, "output didn't match:\n(?ms).*line 1\n\\.\\.\\.line 2\nline 3\\.\\.\\.\n.*")
+			})
+
+			it("doesn't collide with regex chars", func() {
+				invoker := invokers.AssertInvoker{}
+				assertContainsTask := tasks.NewAssertContainsTask(types.ScopeDefault, `line 1
+...
+[something] with brackers
+...
+a url http://example.com/
+...
+`,
+					tasks.WithIgnoreLines("..."))
+
+				assert.True(t, invoker.Supports(assertContainsTask))
+				_, err := invoker.Invoke(assertContainsTask, "", `line 1
+line 2
+[something] with brackers
+a line in the middle
+a url http://example.com/
+a trailing line
+`)
+				assert.Nil(t, err)
 			})
 		})
 	})
