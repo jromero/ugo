@@ -29,35 +29,41 @@ func main() {
 		AddFlag("recursive,r,R", "recursively look for tutorials", commando.Bool, false).
 		AddFlag("verbose,v", "verbose output", commando.Bool, false).
 		SetAction(func(args cliArgs, flags cliFlags) {
+			logger := &ugo.Logger{
+				Level: ugo.INFO,
+			}
+
 			path, err := flags["path"].GetString()
 			if err != nil {
-				fatalError(1, err.Error())
+				fatalError(logger, err, 1)
 			}
 
 			recursive, err := flags["recursive"].GetBool()
 			if err != nil {
-				fatalError(1, err.Error())
+				fatalError(logger, err, 1)
 			}
 
 			verbose, err := flags["verbose"].GetBool()
 			if err != nil {
-				fatalError(1, err.Error())
+				fatalError(logger, err, 1)
+			}
+
+			if verbose {
+				logger.Level = ugo.DEBUG
 			}
 
 			files, err := searchForFiles(path, recursive)
 			if err != nil {
-				fatalError(1, err.Error())
+				fatalError(logger, err, 1)
 			}
 
 			var plans []types.Plan
 			for _, file := range files {
-				if verbose {
-					println("reading file:", file)
-				}
+				logger.Debug("Reading file: %s", file)
 
 				content, err := ioutil.ReadFile(file)
 				if err != nil {
-					fatalError(2, err.Error())
+					fatalError(logger, err, 2)
 				}
 
 				p, err := ugo.Parse(string(content))
@@ -66,23 +72,22 @@ func main() {
 						continue
 					}
 
-					fatalError(2, "parsing '%s': %s", file, err.Error())
+					fatalError(logger, fmt.Errorf("parsing '%s': %s", file, err.Error()), 2)
 				}
 
 				plans = append(plans, p)
 			}
 
 			if len(plans) == 0 {
-				println("nothing found to execute or test")
+				logger.Info("Nothing found to execute or test.")
 				return
 			}
 
-			err = ugo.Invoke(ugo.Aggregate(plans...))
+			err = ugo.Invoke(logger, ugo.Aggregate(plans...))
 			if err != nil {
-				fatalError(3, err.Error())
+				fatalError(logger, err, 3)
 			}
-
-			println("Nothing broken. Good job!")
+			logger.Info("Nothing broken. Good job!")
 		})
 
 	commando.Parse(nil)
@@ -124,11 +129,7 @@ func searchForFiles(path string, recursive bool) (files []string, err error) {
 	return files, nil
 }
 
-func fatalError(code int, msg string, args ...interface{}) {
-	if len(args) > 0 {
-		fmt.Printf("Error: "+msg, args...)
-	} else {
-		fmt.Println("Error: " + msg)
-	}
+func fatalError(logger types.Logger, err error, code int) {
+	logger.Error(err)
 	os.Exit(code)
 }
