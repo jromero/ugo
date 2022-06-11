@@ -3,35 +3,27 @@ package ugo
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 
 	"github.com/jromero/ugo/pkg/ugo/internal/invokers"
 	"github.com/jromero/ugo/pkg/ugo/types"
 )
 
-var taskInvokers = []types.Invoker{
-	&invokers.AssertInvoker{},
-	&invokers.ExecInvoker{},
-	&invokers.FileInvoker{},
-}
-
-func Invoke(plan types.Plan) error {
-	prevFlags := log.Flags()
-	defer func() { log.SetFlags(prevFlags) }()
-	prevPrefix := log.Prefix()
-	defer func() { log.SetPrefix(prevPrefix) }()
-
-	log.SetFlags(0)
+func Invoke(logger types.Logger, plan types.Plan) error {
+	taskInvokers := []types.Invoker{
+		invokers.NewAssertInvoker(logger),
+		invokers.NewExecInvoker(logger),
+		invokers.NewFileInvoker(logger),
+	}
 
 	for _, suite := range plan.Suites() {
-		log.SetPrefix(fmt.Sprintf("[%s] ", suite.Name()))
-		log.Printf("Suite '%s' executing...", suite.Name())
+		logger.Info("Suite '%s' executing...", suite.Name())
+		logger.AddBreadcrumb(suite.Name())
 
 		workDir, err := ioutil.TempDir("", fmt.Sprintf("suite-%s-*", suite.Name()))
 		if err != nil {
 			return err
 		}
-		log.Println("Working directory:", workDir)
+		logger.Debug("Working directory: %s", workDir)
 
 		orderedTasks := append(append(
 			suite.Tasks(types.ScopeSetup),
@@ -40,8 +32,9 @@ func Invoke(plan types.Plan) error {
 
 		var aggrOutput string
 		for i, task := range orderedTasks {
-			log.SetPrefix(fmt.Sprintf("[%s][#%d-%s:%s] ", suite.Name(), i+1, task.Scope(), task.Name()))
-			log.Printf("--> Running task #%d", i+1)
+			logger.Info("Running task #%d", i+1)
+			taskName := fmt.Sprintf("#%d-%s:%s", i+1, task.Scope(), task.Name())
+			logger.AddBreadcrumb(taskName)
 
 			for _, invoker := range taskInvokers {
 				if invoker.Supports(task) {
@@ -54,7 +47,11 @@ func Invoke(plan types.Plan) error {
 					break
 				}
 			}
+
+			logger.PopBreadcrumb(taskName)
 		}
+
+		logger.PopBreadcrumb(suite.Name())
 	}
 
 	return nil

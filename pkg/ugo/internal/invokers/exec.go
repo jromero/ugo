@@ -5,7 +5,6 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -16,7 +15,13 @@ import (
 
 var _ types.Invoker = (*ExecInvoker)(nil)
 
-type ExecInvoker struct{}
+type ExecInvoker struct {
+	Logger types.Logger
+}
+
+func NewExecInvoker(logger types.Logger) *ExecInvoker {
+	return &ExecInvoker{Logger: logger}
+}
 
 func (e *ExecInvoker) Supports(task types.Task) bool {
 	_, ok := task.(*tasks.ExecTask)
@@ -24,10 +29,10 @@ func (e *ExecInvoker) Supports(task types.Task) bool {
 }
 
 func (e *ExecInvoker) Invoke(task types.Task, workDir, _ string) (output string, err error) {
-	return executeExec(workDir, task.(*tasks.ExecTask))
+	return e.executeExec(workDir, task.(*tasks.ExecTask))
 }
 
-func executeExec(workDir string, task *tasks.ExecTask) (output string, err error) {
+func (e *ExecInvoker) executeExec(workDir string, task *tasks.ExecTask) (output string, err error) {
 	tmpScript := filepath.Join(workDir, fmt.Sprintf(".script-%x", sha256.Sum256([]byte(task.Contents()))))
 	defer os.Remove(tmpScript)
 
@@ -59,11 +64,11 @@ func executeExec(workDir string, task *tasks.ExecTask) (output string, err error
 		Stderr: &outBuf,
 	}
 
-	log.Printf("Executing the following:\n%s", task.Contents())
+	e.Logger.Debug("Executing the following:\n%s", task.Contents())
 	err = cmd.Run()
 
 	output = outBuf.String()
-	log.Printf("Output:\n%s", output)
+	e.Logger.Debug("Output:\n%s", output)
 	if exitError, ok := err.(*exec.ExitError); err != nil && ok {
 		if exitCode == -1 || exitError.ExitCode() == exitCode {
 			return output, nil

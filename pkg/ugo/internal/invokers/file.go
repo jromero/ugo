@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 
@@ -14,7 +13,15 @@ import (
 
 var _ types.Invoker = (*FileInvoker)(nil)
 
-type FileInvoker struct{}
+type FileInvoker struct {
+	Logger types.Logger
+}
+
+func NewFileInvoker(logger types.Logger) *FileInvoker {
+	return &FileInvoker{
+		Logger: logger,
+	}
+}
 
 func (f *FileInvoker) Supports(task types.Task) bool {
 	_, ok := task.(*tasks.FileTask)
@@ -22,14 +29,14 @@ func (f *FileInvoker) Supports(task types.Task) bool {
 }
 
 func (f *FileInvoker) Invoke(task types.Task, workDir, _ string) (output string, err error) {
-	return "", executeFile(workDir, task.(*tasks.FileTask))
+	return "", f.executeFile(workDir, task.(*tasks.FileTask))
 }
 
-func executeFile(workDir string, task *tasks.FileTask) error {
+func (f *FileInvoker) executeFile(workDir string, task *tasks.FileTask) error {
 	if task.Filename() == "" {
 		return errors.New("filename for a file task must be provided")
 	}
 
-	log.Printf("Writing file (%s) with contents:\n%s", task.Filename(), task.Contents())
+	f.Logger.Debug("Writing file (%s) with contents:\n%s", task.Filename(), task.Contents())
 	return ioutil.WriteFile(filepath.Join(workDir, fmt.Sprintf("%v", task.Filename())), []byte(task.Contents()), os.ModePerm)
 }
