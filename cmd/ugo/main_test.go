@@ -17,7 +17,7 @@ func TestCmd(t *testing.T) {
 					cwd, err := os.Getwd()
 					assert.Nil(t, err)
 
-					files, err := searchForFiles(filepath.Join("testdata", "tutorials"), true)
+					files, err := searchForFiles(filepath.Join("testdata", "tutorials"), true, []string{".md"})
 					assert.Nil(t, err)
 					assert.Equal(t, []string{
 						filepath.Join(cwd, "testdata", "tutorials", "nested-1", "nested-1a", "tutorial-nested-1a.md"),
@@ -36,7 +36,7 @@ func TestCmd(t *testing.T) {
 					cwd, err := os.Getwd()
 					assert.Nil(t, err)
 
-					files, err := searchForFiles(filepath.Join("testdata", "tutorials"), false)
+					files, err := searchForFiles(filepath.Join("testdata", "tutorials"), false, []string{".md"})
 					assert.Nil(t, err)
 					assert.Equal(t, []string{
 						filepath.Join(cwd, "testdata", "tutorials", "tutorial-1.md"),
@@ -51,7 +51,7 @@ func TestCmd(t *testing.T) {
 				cwd, err := os.Getwd()
 				assert.Nil(t, err)
 
-				files, err := searchForFiles(filepath.Join("testdata", "tutorials", "tutorial-1.md"), false)
+				files, err := searchForFiles(filepath.Join("testdata", "tutorials", "tutorial-1.md"), false, []string{".md"})
 				assert.Nil(t, err)
 				assert.Equal(t, []string{
 					filepath.Join(cwd, "testdata", "tutorials", "tutorial-1.md"),
@@ -59,7 +59,7 @@ func TestCmd(t *testing.T) {
 			})
 
 			it("errors if file doesn't exist", func() {
-				_, err := searchForFiles(filepath.Join("testdata", "tutorials", "non-exists.md"), false)
+				_, err := searchForFiles(filepath.Join("testdata", "tutorials", "non-exists.md"), false, []string{".md"})
 				assert.EqualError(t, err, "stat testdata/tutorials/non-exists.md: no such file or directory")
 			})
 		})
