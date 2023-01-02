@@ -27,7 +27,7 @@ func (a *AssertInvoker) Supports(task types.Task) bool {
 	return ok
 }
 
-func (a *AssertInvoker) Invoke(task types.Task, _, prevOutput string) (output string, err error) {
+func (a *AssertInvoker) Invoke(task types.Task, keep bool, _, prevOutput string) (output string, err error) {
 	containsTask := task.(*tasks.AssertContainsTask)
 	return "", a.executeAssertContains(prevOutput, containsTask)
 }

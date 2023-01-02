@@ -31,6 +31,7 @@ func main() {
 		AddFlag("recursive,r,R", "recursively look for tutorials", commando.Bool, false).
 		AddFlag("verbose,v", "verbose output", commando.Bool, false).
 		AddFlag("extensions,e", "comma separated list of tutorial file extensions", commando.String, ".md,.mdx").
+		AddFlag("keep,k", "keep the generated files", commando.Bool, false).
 		SetAction(func(args cliArgs, flags cliFlags) {
 			logger := &ugo.Logger{
 				Level: ugo.INFO,
@@ -60,6 +61,11 @@ func main() {
 				fatalError(logger, err, 1)
 			}
 			extensions := strings.Split(extList, ",")
+
+			keep, err := flags["keep"].GetBool()
+			if err != nil {
+				fatalError(logger, err, 1)
+			}
 
 			files, err := searchForFiles(path, recursive, extensions)
 			if err != nil {
@@ -92,7 +98,7 @@ func main() {
 				return
 			}
 
-			err = ugo.Invoke(logger, ugo.Aggregate(plans...))
+			_, err = ugo.Invoke(logger, keep, ugo.Aggregate(plans...))
 			if err != nil {
 				fatalError(logger, err, 3)
 			}
