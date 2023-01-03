@@ -5,7 +5,9 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
+	"github.com/samber/lo"
 	"github.com/thatisuday/commando"
 
 	"github.com/jromero/ugo/pkg/ugo"
@@ -28,6 +30,7 @@ func main() {
 		AddFlag("path,p", "path to your tutorials", commando.String, ".").
 		AddFlag("recursive,r,R", "recursively look for tutorials", commando.Bool, false).
 		AddFlag("verbose,v", "verbose output", commando.Bool, false).
+		AddFlag("extensions,e", "comma separated list of tutorial file extensions", commando.String, ".md,.mdx").
 		SetAction(func(args cliArgs, flags cliFlags) {
 			logger := &ugo.Logger{
 				Level: ugo.INFO,
@@ -52,7 +55,13 @@ func main() {
 				logger.Level = ugo.DEBUG
 			}
 
-			files, err := searchForFiles(path, recursive)
+			extList, err := flags["extensions"].GetString()
+			if err != nil {
+				fatalError(logger, err, 1)
+			}
+			extensions := strings.Split(extList, ",")
+
+			files, err := searchForFiles(path, recursive, extensions)
 			if err != nil {
 				fatalError(logger, err, 1)
 			}
@@ -93,7 +102,7 @@ func main() {
 	commando.Parse(nil)
 }
 
-func searchForFiles(path string, recursive bool) (files []string, err error) {
+func searchForFiles(path string, recursive bool, extensions []string) (files []string, err error) {
 	fileInfo, err := os.Stat(path)
 	if err != nil {
 		return nil, err
@@ -104,10 +113,12 @@ func searchForFiles(path string, recursive bool) (files []string, err error) {
 			return nil, err
 		} else {
 			for _, fileInfo := range f {
-				if !fileInfo.IsDir() {
+				ext := filepath.Ext(fileInfo.Name())
+				hidden := strings.HasPrefix(filepath.Base(fileInfo.Name()), ".")
+				if !fileInfo.IsDir() && lo.Contains(extensions, ext) && !hidden {
 					files = append(files, filepath.Join(path, fileInfo.Name()))
 				} else if recursive {
-					f, err := searchForFiles(filepath.Join(path, fileInfo.Name()), recursive)
+					f, err := searchForFiles(filepath.Join(path, fileInfo.Name()), recursive, extensions)
 					if err != nil {
 						return nil, err
 					}
@@ -116,7 +127,11 @@ func searchForFiles(path string, recursive bool) (files []string, err error) {
 			}
 		}
 	} else {
-		files = append(files, path)
+		ext := filepath.Ext(fileInfo.Name())
+		hidden := strings.HasPrefix(filepath.Base(fileInfo.Name()), ".")
+		if lo.Contains(extensions, ext) && !hidden {
+			files = append(files, path)
+		}
 	}
 
 	for i := 0; i < len(files); i++ {
