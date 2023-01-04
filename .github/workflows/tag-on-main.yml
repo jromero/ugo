@@ -1,0 +1,29 @@
+name: Bump version
+on:
+  push:
+    branches:
+      - main
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GH_PAT }}
+      -
+        name: Fetch all tags
+        run: git fetch --force --tags
+      -
+        name: Set up Go
+        uses: actions/setup-go@v3
+      -
+        name: Install svu
+        run: GOBIN=$(realpath tools) go install github.com/caarlos0/svu@latest
+      -
+        name: Bump version and push tag
+        run: |
+          git tag $(./tools/svu patch)
+          git push origin $(./tools/svu c)
