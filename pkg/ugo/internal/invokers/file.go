@@ -28,7 +28,7 @@ func (f *FileInvoker) Supports(task types.Task) bool {
 	return ok
 }
 
-func (f *FileInvoker) Invoke(task types.Task, workDir, _ string) (output string, err error) {
+func (f *FileInvoker) Invoke(task types.Task, keep bool, workDir, _ string) (output string, err error) {
 	return "", f.executeFile(workDir, task.(*tasks.FileTask))
 }
 

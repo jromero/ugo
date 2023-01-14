@@ -1,6 +1,7 @@
 package ugo_test
 
 import (
+	"os"
 	"testing"
 
 	"github.com/sclevine/spec"
@@ -18,8 +19,9 @@ func TestInvoke(t *testing.T) {
 		when("exec", func() {
 			when("exit code doesn't match expected", func() {
 				it("errors", func() {
-					err := ugo.Invoke(
+					wds, err := ugo.Invoke(
 						logger,
+						false,
 						types.NewPlan([]types.Suite{
 							types.NewSuite("test1", 0, []types.Task{
 								tasks.NewExecTask(types.ScopeDefault, "exit 1", 0),
@@ -27,13 +29,15 @@ func TestInvoke(t *testing.T) {
 						}))
 
 					assert.Error(t, err, "exec task #1 failed: exit status 1")
+					assert.Empty(t, wds)
 				})
 			})
 
 			when("exit code matches expected", func() {
 				it("doesn't error", func() {
-					err := ugo.Invoke(
+					wds, err := ugo.Invoke(
 						logger,
+						false,
 						types.NewPlan([]types.Suite{
 							types.NewSuite("test1", 0, []types.Task{
 								tasks.NewExecTask(types.ScopeDefault, "exit 1", 1),
@@ -41,13 +45,15 @@ func TestInvoke(t *testing.T) {
 						}))
 
 					assert.Nil(t, err)
+					assert.Empty(t, wds)
 				})
 			})
 
 			when("exit code expected is set to -1", func() {
 				it("doesn't error", func() {
-					err := ugo.Invoke(
+					wds, err := ugo.Invoke(
 						logger,
+						false,
 						types.NewPlan([]types.Suite{
 							types.NewSuite("test1", 0, []types.Task{
 								tasks.NewExecTask(types.ScopeDefault, "exit 99", -1),
@@ -55,6 +61,27 @@ func TestInvoke(t *testing.T) {
 						}))
 
 					assert.Nil(t, err)
+					assert.Empty(t, wds)
+				})
+			})
+
+			when("asked to keep generated files", func() {
+				it("keeps scripts", func() {
+					wds, err := ugo.Invoke(
+						logger,
+						true,
+						types.NewPlan([]types.Suite{
+							types.NewSuite("test1", 0, []types.Task{
+								tasks.NewExecTask(types.ScopeDefault, "exit 0", 0),
+							}),
+						}))
+
+					assert.Nil(t, err)
+					assert.Len(t, wds, 1)
+					entry, err := os.ReadDir(wds[0])
+					assert.Nil(t, err)
+					assert.Len(t, entry, 1)
+					os.RemoveAll(wds[0])
 				})
 			})
 		})
@@ -63,8 +90,9 @@ func TestInvoke(t *testing.T) {
 			when("contains", func() {
 				when("matches content", func() {
 					it("doesn't error", func() {
-						err := ugo.Invoke(
+						wds, err := ugo.Invoke(
 							logger,
+							false,
 							types.NewPlan([]types.Suite{
 								types.NewSuite("test1", 0, []types.Task{
 									tasks.NewExecTask(types.ScopeDefault, `
@@ -76,13 +104,15 @@ echo "hello #2"
 							}))
 
 						assert.Nil(t, err)
+						assert.Empty(t, wds)
 					})
 				})
 
 				when("multiple consecutive asserts", func() {
 					it("searches in output", func() {
-						err := ugo.Invoke(
+						wds, err := ugo.Invoke(
 							logger,
+							false,
 							types.NewPlan([]types.Suite{
 								types.NewSuite("test1", 0, []types.Task{
 									tasks.NewExecTask(types.ScopeDefault, "echo hello1;echo hello2", 0),
@@ -92,13 +122,15 @@ echo "hello #2"
 							}))
 
 						assert.Nil(t, err)
+						assert.Empty(t, wds)
 					})
 				})
 
 				when("content has ansi codes", func() {
 					it("matches ignoring ansi", func() {
-						err := ugo.Invoke(
+						wds, err := ugo.Invoke(
 							logger,
+							false,
 							types.NewPlan([]types.Suite{
 								types.NewSuite("test1", 0, []types.Task{
 									tasks.NewExecTask(types.ScopeDefault, `
@@ -109,13 +141,15 @@ echo -e "\x1b[38;5;140mfoo\x1b[0mbar"
 							}))
 
 						assert.Nil(t, err)
+						assert.Empty(t, wds)
 					})
 				})
 
 				when("contents don't contain", func() {
 					it("errors", func() {
-						err := ugo.Invoke(
+						wds, err := ugo.Invoke(
 							logger,
+							false,
 							types.NewPlan([]types.Suite{
 								types.NewSuite("test1", 0, []types.Task{
 									tasks.NewExecTask(types.ScopeDefault, `echo "hello #1"`, 0),
@@ -124,6 +158,7 @@ echo -e "\x1b[38;5;140mfoo\x1b[0mbar"
 							}))
 
 						assert.EqualError(t, err, "Output did not contain:\nhello #2")
+						assert.Empty(t, wds)
 					})
 				})
 			})
@@ -131,8 +166,9 @@ echo -e "\x1b[38;5;140mfoo\x1b[0mbar"
 
 		when("scopes", func() {
 			it("executes in order: setup, default, teardown", func() {
-				err := ugo.Invoke(
+				wds, err := ugo.Invoke(
 					logger,
+					false,
 					types.NewPlan([]types.Suite{
 						types.NewSuite("test1", 0, []types.Task{
 							tasks.NewExecTask(types.ScopeSetup, `echo hello > test-file.txt`, 0),
@@ -144,6 +180,7 @@ echo -e "\x1b[38;5;140mfoo\x1b[0mbar"
 				)
 
 				assert.Nil(t, err)
+				assert.Empty(t, wds)
 			})
 
 		})
