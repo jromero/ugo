@@ -18,7 +18,7 @@ jobs:
         run: git fetch --force --tags
       -
         name: Set up Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
       -
         name: Install svu
         run: GOBIN=$(realpath tools) go install github.com/caarlos0/svu@latest
