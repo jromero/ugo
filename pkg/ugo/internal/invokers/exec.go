@@ -28,13 +28,15 @@ func (e *ExecInvoker) Supports(task types.Task) bool {
 	return ok
 }
 
-func (e *ExecInvoker) Invoke(task types.Task, workDir, _ string) (output string, err error) {
-	return e.executeExec(workDir, task.(*tasks.ExecTask))
+func (e *ExecInvoker) Invoke(task types.Task, keep bool, workDir, _ string) (output string, err error) {
+	return e.executeExec(keep, workDir, task.(*tasks.ExecTask))
 }
 
-func (e *ExecInvoker) executeExec(workDir string, task *tasks.ExecTask) (output string, err error) {
+func (e *ExecInvoker) executeExec(keep bool, workDir string, task *tasks.ExecTask) (output string, err error) {
 	tmpScript := filepath.Join(workDir, fmt.Sprintf(".script-%x", sha256.Sum256([]byte(task.Contents()))))
-	defer os.Remove(tmpScript)
+	if !keep {
+		defer os.Remove(tmpScript)
+	}
 
 	exitCode := task.ExitCode()
 

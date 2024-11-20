@@ -27,7 +27,7 @@ line 5...
 					tasks.WithIgnoreLines("..."))
 
 				assert.True(t, invoker.Supports(assertContainsTask))
-				_, err := invoker.Invoke(assertContainsTask, "", `line 1
+				_, err := invoker.Invoke(assertContainsTask, false, "", `line 1
 line 2
 line 3
 ...line 4
@@ -46,7 +46,7 @@ line 3...
 					tasks.WithIgnoreLines("..."))
 
 				assert.True(t, invoker.Supports(assertContainsTask))
-				_, err := invoker.Invoke(assertContainsTask, "", `line 1
+				_, err := invoker.Invoke(assertContainsTask, false, "", `line 1
 line 2
 line 3`)
 
@@ -65,7 +65,7 @@ a url http://example.com/
 					tasks.WithIgnoreLines("..."))
 
 				assert.True(t, invoker.Supports(assertContainsTask))
-				_, err := invoker.Invoke(assertContainsTask, "", `line 1
+				_, err := invoker.Invoke(assertContainsTask, false, "", `line 1
 line 2
 [something] with brackers
 a line in the middle
